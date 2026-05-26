@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>해외소미 AI 고객센터 · 서비스 회복 설계 프로토타입</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Helvetica Neue',sans-serif;
+  background:#e8e8e8;
+  min-height:100vh;
+  padding:24px 16px 40px;
+}
+h1{
+  text-align:center;
+  font-size:17px;
+  color:#222;
+  margin-bottom:4px;
+  letter-spacing:-.3px;
+  word-break:keep-all;
+}
+.subtitle{
+  text-align:center;
+  font-size:12px;
+  color:#888;
+  margin-bottom:20px;
+  word-break:keep-all;
+}
+
+/* ── Tab bar ── */
+.tab-bar{
+  display:flex;
+  background:#fff;
+  border-radius:12px;
+  padding:5px;
+  gap:4px;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:820px;
+  margin:0 auto 24px;
+}
+.tab-btn{
+  flex:1;
+  padding:9px 4px;
+  border:none;
+  background:transparent;
+  border-radius:9px;
+  cursor:pointer;
+  font-size:11px;
+  color:#555;
+  font-weight:500;
+  line-height:1.4;
+  transition:all .2s;
+  word-break:keep-all;
+}
+.tab-btn.active{background:#ff6600;color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(255,102,0,.35)}
+
+/* ── Comparison row ── */
+.comparison{display:none;max-width:820px;margin:0 auto;flex-direction:row;gap:20px;align-items:flex-start}
+.comparison.active{display:flex}
+.col{display:flex;flex-direction:column;align-items:center;flex:1}
+.section-label{display:flex;align-items:center;gap:8px;margin-bottom:12px;align-self:flex-start}
+.badge-asis{background:#e53935;color:#fff;font-size:12px;font-weight:700;padding:3px 11px;border-radius:10px}
+.badge-tobe{background:#2e7d32;color:#fff;font-size:12px;font-weight:700;padding:3px 11px;border-radius:10px}
+.section-title{font-size:13px;font-weight:600;color:#333;word-break:keep-all}
+
+/* ── Phone frame ── */
+.phone{
+  width:340px;
+  background:#f0f0f0;
+  border-radius:36px;
+  box-shadow:0 6px 32px rgba(0,0,0,.22),inset 0 0 0 1px rgba(0,0,0,.08);
+  overflow:hidden;
+  border:6px solid #1a1a1a;
+}
+
+/* Status bar */
+.status-bar{
+  background:#fff;
+  padding:10px 18px 6px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;font-weight:600;
+}
+.status-icons{display:flex;gap:4px;align-items:center;font-size:11px}
+.battery{background:#333;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700}
+
+/* Chat top bar */
+.chat-top{
+  background:#fff;
+  border-bottom:1px solid #eee;
+  padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+}
+.back{font-size:20px;color:#111;line-height:1}
+.top-title{font-size:16px;font-weight:600;flex:1;text-align:center}
+.top-right{position:relative;display:flex;align-items:center}
+.dot-menu{font-size:20px;color:#333;letter-spacing:1px}
+.notif-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:#e53935;color:#fff;
+  border-radius:10px;font-size:10px;padding:1px 5px;font-weight:700;
+}
+
+/* Chat body */
+.chat-body{
+  background:#f0f0f0;
+  padding:12px;
+  min-height:390px;max-height:480px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;
+}
+.timestamp{text-align:center;font-size:11px;color:#bbb;margin:2px 0}
+.ai-name{font-size:11px;color:#999;margin-bottom:3px}
+
+/* Bubbles */
+.msg-user{align-self:flex-end}
+.msg-ai{align-self:flex-start}
+.bubble{padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.55;max-width:240px;word-break:keep-all}
+.bubble-user{background:#fff8e1;border-bottom-right-radius:4px}
+.bubble-ai{background:#fff;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:13px;max-width:260px;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.card-title{font-size:13px;font-weight:500;color:#333;margin-bottom:9px;line-height:1.5;word-break:keep-all}
+.menu-item{
+  border:1px solid #eee;border-radius:8px;padding:10px 12px;
+  margin-bottom:7px;font-size:13px;color:#333;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.menu-item:last-child{margin-bottom:0}
+
+/* Confirm card buttons */
+.btn-row{display:flex;gap:7px;margin-top:10px}
+.btn{border:none;border-radius:8px;padding:8px 0;font-size:12px;cursor:pointer;flex:1;text-align:center;font-weight:500;word-break:keep-all}
+.btn-orange{background:#ff6600;color:#fff}
+.btn-gray{background:#f5f5f5;color:#444;border:1px solid #ddd}
+.btn-full{width:100%;margin-top:6px;padding:8px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer}
+
+/* Status boxes */
+.box-wait{background:#fff8e1;border:1.5px solid #fbbf24;border-radius:10px;padding:11px 13px;max-width:260px;font-size:13px}
+.box-ok{background:#f0fdf4;border:1.5px solid #4ade80;border-radius:10px;padding:11px 13px;max-width:260px;font-size:13px}
+.box-err{background:#fff1f2;border:1.5px solid #f87171;border-radius:10px;padding:11px 13px;max-width:260px;font-size:13px}
+.progress-track{height:5px;background:#e5e7eb;border-radius:3px;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px}
+
+/* Annotation tags */
+.tag-err{display:inline-block;background:#e53935;color:#fff;font-size:11px;padding:2px 9px;border-radius:10px;margin-bottom:5px;word-break:keep-all}
+.tag-ok{display:inline-block;background:#2e7d32;color:#fff;font-size:11px;padding:2px 9px;border-radius:10px;margin-bottom:5px;word-break:keep-all}
+
+/* Outlines */
+.outline-err{outline:2.5px solid #e53935;outline-offset:3px;border-radius:11px}
+.outline-ok{outline:2.5px solid #2e7d32;outline-offset:3px;border-radius:11px}
+
+/* Bottom bar */
+.chat-bottom{background:#fff;border-top:1px solid #eee;padding:7px 10px}
+.quick-scroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:7px;white-space:nowrap}
+.quick-chip{display:inline-block;padding:5px 11px;background:#f3f4f6;border-radius:13px;font-size:11px;color:#333}
+.input-row{display:flex;align-items:center;gap:7px}
+.input-field{flex:1;padding:7px 13px;background:#f3f4f6;border-radius:18px;font-size:12px;color:#aaa;border:none}
+.add-circle{width:30px;height:30px;border:1.5px solid #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#aaa;flex-shrink:0}
+.transfer-pill{background:#2e7d32;color:#fff;border-radius:18px;padding:7px 11px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0}
+
+/* Home indicator */
+.home-indicator{background:#fff;height:18px;display:flex;align-items:center;justify-content:center}
+.home-bar{width:110px;height:4px;background:#333;border-radius:3px}
+
+/* Research label */
+.research-label{
+  margin-top:10px;padding:7px 14px;border-radius:9px;font-size:11px;line-height:1.6;text-align:center;max-width:340px;word-break:keep-all;
+}
+.research-asis{background:#fff1f2;border:1px solid #fca5a5;color:#991b1b}
+.research-tobe{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+
+/* App switch */
+.app-switch-banner{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin:4px auto;
+  background:#e2e8f0;border-radius:18px;padding:7px 14px;
+  font-size:11px;color:#475569;width:fit-content;word-break:keep-all;
+}
+
+/* State chip */
+.state-chip{font-size:11px;padding:3px 10px;border-radius:10px;margin:0 auto 6px;width:fit-content;font-weight:600}
+.state-chip-wait{background:#fef3c7;color:#92400e}
+.state-chip-back-err{background:#fee2e2;color:#991b1b}
+.state-chip-back-ok{background:#d1fae5;color:#065f46}
+
+/* Homepage */
+.homepage-body{background:#f5f5f5;padding:12px;min-height:390px;max-height:480px;overflow-y:auto}
+.hp-banner{background:linear-gradient(135deg,#1a6db5,#2196f3);border-radius:12px;padding:14px;color:#fff;font-size:12px;margin-bottom:10px}
+.hp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#fff;border-radius:12px;padding:12px;margin-bottom:10px}
+.hp-item{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:#333;word-break:keep-all;text-align:center}
+.hp-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+
+/* Channel card */
+.channel-card{background:#fff;border-radius:12px;padding:13px;max-width:260px;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.channel-btns{display:flex;gap:9px;margin-top:10px}
+.ch-ai{flex:1;background:#fff7ed;border:1.5px solid #ff6600;color:#c2410c;border-radius:10px;padding:11px 0;font-size:12px;font-weight:500;cursor:pointer;text-align:center}
+.ch-human{flex:1;background:#ff6600;color:#fff;border:none;border-radius:10px;padding:11px 0;font-size:12px;font-weight:500;cursor:pointer;text-align:center}
+
+/* Resume button */
+.resume-btn{background:#2e7d32;color:#fff;border:none;border-radius:9px;padding:9px;width:100%;font-size:13px;font-weight:500;cursor:pointer;text-align:center;margin-top:7px}
+
+@media(max-width:740px){
+  .comparison.active{flex-direction:column;align-items:center}
+  .tab-bar{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<h1>해외소미 AI 고객센터 · 서비스 회복 설계 프로토타입</h1>
+<p class="subtitle">석사 논문 설계 파트 · AS-IS vs TO-BE · 4가지 페인포인트 개선 방안</p>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="show(1)">① 의도 확인<br><span style="font-weight:400;font-size:10px">PUF / 목표1</span></button>
+  <button class="tab-btn" onclick="show(2)">② 상담원 연결<br><span style="font-weight:400;font-size:10px">PHSU / 목표2</span></button>
+  <button class="tab-btn" onclick="show(3)">③ 채널 투명성<br><span style="font-weight:400;font-size:10px">PHSU / 목표3</span></button>
+  <button class="tab-btn" onclick="show(4)">④ 맥락 연속성<br><span style="font-weight:400;font-size:10px">PCD / 목표2</span></button>
+</div>
+
+
+<!-- ════════════════════════════════════
+     GROUP 1 — 의도 재확인
+     ════════════════════════════════════ -->
+<div id="g1" class="comparison active">
+
+  <!-- AS-IS -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-asis">AS-IS</span>
+      <span class="section-title">AI가 엉뚱한 답변 → 사용자 좌절</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:13</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="timestamp">01:13</div>
+        <div class="msg-user">
+          <div class="bubble bubble-user">안녕하세요, 옷 소재가 상품 설명과 다를 경우 환불 책임은 누구에게 있나요?</div>
+        </div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-err">⚠ AI가 질문을 잘못 이해하여 엉뚱한 답변</span>
+          <div class="card outline-err">
+            <div class="card-title">고객님, 실제 환불 금액과 신청 환불 금액이 다를 수 있는 경우는 다음과 같습니다:</div>
+            <div style="font-size:12px;color:#333;line-height:1.6">
+              <p><strong>1. 배송비 미포함 상품 환불의 경우</strong></p>
+              <p style="color:#666;margin:3px 0 8px">배송비 미포함 주문이며 품질 문제가 아닐 경우, 환불 시 판매자 발송 배송비가 공제됩니다.</p>
+              <p><strong>2. 홍바오 또는 적립금으로 결제한 주문의 환불</strong></p>
+              <p style="color:#666;margin-top:3px">홍바오 또는 적립금으로 결제하신 경우, 환불 금액에서...</p>
+            </div>
+            <div style="text-align:center;font-size:12px;color:#ff6600;margin-top:9px">더 보기 ∨</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-asis">
+      페인포인트: PUF (지각된 이해 실패)<br>AI가 즉각 답변하지만 방향이 잘못되어 좌절이 누적됨
+    </div>
+  </div>
+
+  <!-- TO-BE -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-tobe">TO-BE</span>
+      <span class="section-title">먼저 의도 확인 후 정확한 답변 제공</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:13</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="timestamp">01:13</div>
+        <div class="msg-user">
+          <div class="bubble bubble-user">안녕하세요, 옷 소재가 상품 설명과 다를 경우 환불 책임은 누구에게 있나요?</div>
+        </div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-ok">✓ 답변 전 의도 먼저 확인</span>
+          <div class="card outline-ok">
+            <div class="card-title" style="color:#555">제가 이해한 질문이 맞나요?</div>
+            <div style="background:#fff8e1;border-left:3px solid #ff6600;padding:9px 11px;border-radius:8px;font-size:13px;font-weight:500;color:#333;margin-bottom:9px;word-break:keep-all">
+              🔍 "소재가 설명과 다를 경우, 환불 책임은 누구에게 있나요?"
+            </div>
+            <div style="font-size:12px;color:#888;margin-bottom:10px;word-break:keep-all">맞다면 확인을 눌러주세요. 정확한 답변을 드리겠습니다.</div>
+            <div class="btn-row">
+              <button class="btn btn-orange">✓ 맞아요</button>
+              <button class="btn btn-gray">✗ 다시 설명할게요</button>
+            </div>
+            <button class="btn-full">🎤 음성으로 말하기</button>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-tobe">
+      <strong>의도 확인 → 좌절 누적 차단 (PUF / 목표1)</strong><br>
+      AI 신뢰도 낮을 때 먼저 의도를 확인하여 잘못된 답변으로 인한 좌절을 방지
+    </div>
+  </div>
+
+</div><!-- /g1 -->
+
+
+<!-- ════════════════════════════════════
+     GROUP 2 — 상담원 한 번에 연결
+     ════════════════════════════════════ -->
+<div id="g2" class="comparison">
+
+  <!-- AS-IS -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-asis">AS-IS</span>
+      <span class="section-title">"상담원 연결" 반복해도 메뉴만 반환</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:14</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="msg-user"><div class="bubble bubble-user">상담원 연결</div></div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-err">⚠ 1번째: 메뉴로 다시 돌려보냄</span>
+          <div class="card outline-err">
+            <div class="card-title">문의하실 내용을 선택해주세요</div>
+            <div class="menu-item">배송 문제 <span>›</span></div>
+            <div class="menu-item">판매자 연락 <span>›</span></div>
+            <div class="menu-item">기타 문의 <span>›</span></div>
+          </div>
+        </div>
+        <div class="msg-user"><div class="bubble bubble-user">상담원 연결</div></div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-err">⚠ 2번째: 계속 반복되는 루프</span>
+          <div class="card outline-err">
+            <div class="card-title">문의하실 내용을 선택해주세요</div>
+            <div class="menu-item">배송 문제 <span>›</span></div>
+            <div class="menu-item">판매자 연락 <span>›</span></div>
+            <div class="menu-item">기타 문의 <span>›</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-asis">
+      페인포인트: PHSU (지각된 인간 지원 불가) + PPI (프로세스 비효율)<br>반복 요청을 무시하고 메뉴를 반환 → 상담원 연결 불가
+    </div>
+  </div>
+
+  <!-- TO-BE -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-tobe">TO-BE</span>
+      <span class="section-title">반복 감지 시 자동 에스컬레이션</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:14</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="msg-user"><div class="bubble bubble-user">상담원 연결</div></div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <div class="bubble bubble-ai">네, 상담원 연결을 원하시는군요. AI가 문제를 완전히 해결하지 못한 것 같습니다. 연결을 준비하겠습니다...</div>
+        </div>
+        <div class="msg-user"><div class="bubble bubble-user">상담원 연결</div></div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-ok">✓ 반복 요청 감지 → 자동 에스컬레이션</span>
+          <div class="card outline-ok">
+            <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:8px">🎯 상담원 연결 중</div>
+            <div style="font-size:12px;color:#166534">현재 대기: 앞에 <strong>2명</strong></div>
+            <div style="font-size:12px;color:#166534;margin-top:3px">예상 대기 시간: 약 <strong>40초</strong></div>
+            <div class="progress-track">
+              <div class="progress-fill" style="background:#4ade80;width:66%"></div>
+            </div>
+            <div style="font-size:11px;color:#888;margin-top:7px;word-break:keep-all">대기 중입니다. 연결되면 바로 문의 내용을 말씀해주세요.</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-tobe">
+      <strong>한 번에 에스컬레이션 → 상호작용 회복탄력성 유지 (PHSU / 목표2)</strong><br>
+      사용자의 좌절 신호를 감지하여 자동으로 에스컬레이션, 반복 입력 불필요
+    </div>
+  </div>
+
+</div><!-- /g2 -->
+
+
+<!-- ════════════════════════════════════
+     GROUP 3 — 투명한 채널 선택
+     ════════════════════════════════════ -->
+<div id="g3" class="comparison">
+
+  <!-- AS-IS -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-asis">AS-IS</span>
+      <span class="section-title">상담원 입구가 숨겨져 찾기 어려움</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:11</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="homepage-body">
+        <div style="font-size:11px;color:#999;margin-bottom:4px">해외소미</div>
+        <div class="bubble bubble-ai" style="margin-bottom:11px;word-break:keep-all">타오바오 글로벌에 오신 것을 환영합니다! 궁금한 점이 있으시면 언제든지 소미에게 물어보세요!</div>
+
+        <span class="tag-err">⚠ 광고가 첫 화면 대부분 차지</span>
+        <div style="display:flex;gap:9px;margin-bottom:10px">
+          <div class="hp-banner outline-err" style="width:152px;height:95px;flex-shrink:0">
+            <div style="font-size:10px;opacity:.8">왜</div>
+            <div style="font-size:13px;font-weight:700;line-height:1.4;word-break:keep-all">즉시 할인 쿠폰을 사용할 수 없나요?</div>
+            <div style="font-size:10px;margin-top:7px;opacity:.8">결제 혜택 문제 바로가기</div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:10px;padding:10px">
+            <div style="font-size:11px;color:#ff6600;font-weight:700;margin-bottom:5px">자주 묻는 질문 ↺ 새로고침</div>
+            <div style="font-size:11px;color:#333;line-height:2.1;word-break:keep-all">환불 신청 방법<br>배송 현황 조회<br>판매자 환불 거부 시</div>
+          </div>
+        </div>
+
+        <span class="tag-err">⚠ 상담원 입구가 도구 그리드 속에 숨겨짐</span>
+        <div class="hp-grid outline-err">
+          <div class="hp-item"><div class="hp-icon" style="background:#e8f4fd">📊</div><span>서비스 현황</span></div>
+          <div class="hp-item"><div class="hp-icon" style="background:#fef9c3">📍</div><span>배송 센터</span></div>
+          <div class="hp-item"><div class="hp-icon" style="background:#fce7f3">🎧</div><span>배송 상담</span></div>
+          <div class="hp-item"><div class="hp-icon" style="background:#ede9fe">🧮</div><span>운임 계산</span></div>
+          <div class="hp-item"><div class="hp-icon" style="background:#fff7ed">🎂</div><span>타오령</span></div>
+          <div class="hp-item"><div class="hp-icon" style="background:#f0fdf4">✏️</div><span>리뷰 관리</span></div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-asis">
+      페인포인트: PHSU (지각된 인간 지원 불가)<br>진입 후 상담원 연결 버튼을 찾지 못해 AI 회피 행동 유발
+    </div>
+  </div>
+
+  <!-- TO-BE -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-tobe">TO-BE</span>
+      <span class="section-title">진입 시 채널 선택, 상담원 버튼 상시 노출</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:11</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right"><span class="dot-menu">···</span></div>
+      </div>
+      <div class="homepage-body">
+        <div style="font-size:11px;color:#999;margin-bottom:4px">해외소미</div>
+        <div class="bubble bubble-ai" style="margin-bottom:10px;word-break:keep-all">타오바오 글로벌에 오신 것을 환영합니다! 원하시는 서비스를 선택해주세요:</div>
+
+        <span class="tag-ok">✓ 진입 즉시 병렬 채널 선택 화면 제공</span>
+        <div class="channel-card outline-ok" style="margin-bottom:11px">
+          <div style="font-size:13px;font-weight:600;color:#333;word-break:keep-all">서비스 방식을 선택해주세요</div>
+          <div class="channel-btns">
+            <div class="ch-ai">
+              <div style="font-size:20px;margin-bottom:4px">🤖</div>
+              <div>AI 빠른 답변</div>
+              <div style="font-size:10px;margin-top:3px">즉시 응답</div>
+            </div>
+            <div class="ch-human">
+              <div style="font-size:20px;margin-bottom:4px">👤</div>
+              <div>상담원 연결</div>
+              <div style="font-size:10px;margin-top:3px;opacity:.85">예상 3분</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">자주 묻는 질문</div>
+          <div style="font-size:12px;color:#333;border-left:3px solid #ff6600;padding-left:9px;line-height:2.2;word-break:keep-all">
+            환불 신청 방법<br>배송 현황 조회 방법<br>판매자가 환불을 거부할 경우
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <span class="tag-ok transfer-pill" style="margin:0">👤 상담원 연결</span>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-tobe">
+      <strong>투명한 채널 선택 → AI 회피 행동 방지 (PHSU / 목표3)</strong><br>
+      상담원 버튼을 항상 노출하여 "도움을 받을 수 없다"는 느낌을 없애고 AI 회피를 억제
+    </div>
+  </div>
+
+</div><!-- /g3 -->
+
+
+<!-- ════════════════════════════════════
+     GROUP 4 — 맥락 연속성 (대화 이어가기)
+     ════════════════════════════════════ -->
+<div id="g4" class="comparison">
+
+  <!-- AS-IS -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-asis">AS-IS</span>
+      <span class="section-title">앱 전환 시 대기열 끊김 → 처음부터 재시작</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:15</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <!-- State A -->
+        <div class="state-chip state-chip-wait">상태 A: 대기 중</div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <div class="box-wait">
+            <div style="font-weight:700;color:#92400e">⏳ 상담원 대기 중...</div>
+            <div style="font-size:12px;color:#92400e;margin-top:4px">앞에 <strong>2명</strong> 대기 중, 예상 대기 시간 <strong>40초</strong></div>
+            <div class="progress-track">
+              <div class="progress-fill" style="background:#fbbf24;width:33%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App switch -->
+        <div class="app-switch-banner">
+          <span>📱</span><span>다른 앱으로 전환하여 주문번호 확인</span><span>→</span><span>↩ 복귀</span>
+        </div>
+
+        <!-- State B -->
+        <div class="state-chip state-chip-back-err">상태 B: 복귀 후</div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-err">⚠ 대기열 끊김, 대화 초기화</span>
+          <div class="card outline-err">
+            <div style="color:#b91c1c;font-weight:700;font-size:13px;margin-bottom:7px;word-break:keep-all">⚠ 대기 시간 초과로 연결이 끊겼습니다</div>
+            <div class="card-title">문의하실 내용을 다시 선택해주세요</div>
+            <div class="menu-item">배송 문제 <span>›</span></div>
+            <div class="menu-item">판매자 연락 <span>›</span></div>
+            <div class="menu-item">기타 문의 <span>›</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-asis">
+      페인포인트: PCD (지각된 맥락 단절)<br>백그라운드 전환 시 대기 순서와 대화 맥락이 사라져 강한 좌절감 유발
+    </div>
+  </div>
+
+  <!-- TO-BE -->
+  <div class="col">
+    <div class="section-label">
+      <span class="badge-tobe">TO-BE</span>
+      <span class="section-title">대기 순서 유지 + 대화 맥락 자동 복원</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>01:15</span>
+        <div class="status-icons"><span>▐▐▐</span><span>🛜</span><span class="battery">55</span></div>
+      </div>
+      <div class="chat-top">
+        <span class="back">←</span>
+        <span class="top-title"></span>
+        <div class="top-right">
+          <span class="dot-menu">···</span>
+          <span class="notif-badge">45</span>
+        </div>
+      </div>
+      <div class="chat-body">
+        <!-- State A -->
+        <div class="state-chip state-chip-wait">상태 A: 대기 중</div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <div class="box-wait">
+            <div style="font-weight:700;color:#92400e">⏳ 상담원 대기 중...</div>
+            <div style="font-size:12px;color:#92400e;margin-top:4px">앞에 <strong>2명</strong> 대기 중, 예상 대기 시간 <strong>40초</strong></div>
+            <div class="progress-track">
+              <div class="progress-fill" style="background:#fbbf24;width:33%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App switch -->
+        <div class="app-switch-banner">
+          <span>📱</span><span>다른 앱으로 전환하여 주문번호 확인</span><span>→</span><span>↩ 복귀</span>
+        </div>
+
+        <!-- State B -->
+        <div class="state-chip state-chip-back-ok">상태 B: 복귀 후</div>
+        <div>
+          <div class="ai-name">해외소미</div>
+          <span class="tag-ok">✓ 대기 순서 보존, 진행 상황 업데이트</span>
+          <div class="card outline-ok">
+            <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:7px;word-break:keep-all">✅ 대기 순서를 유지했습니다</div>
+            <div style="font-size:12px;color:#166534;word-break:keep-all">현재: <strong>1번째</strong> (대기 중 1명 앞으로 진행됨)</div>
+            <div style="font-size:12px;color:#166534;margin-top:3px">💾 대화 내용이 자동 저장되었습니다</div>
+            <div class="progress-track">
+              <div class="progress-fill" style="background:#4ade80;width:85%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fallback restore -->
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:5px;word-break:keep-all">예기치 못한 연결 끊김 시:</div>
+          <div class="card" style="max-width:260px;border:1.5px solid #4ade80">
+            <div style="font-size:12px;color:#555;margin-bottom:7px;word-break:keep-all">이전 대화가 중단되었습니다. 이어서 진행하시겠습니까?</div>
+            <button class="resume-btn">🔄 이전 대화 이어가기</button>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="quick-scroll">
+          <span class="quick-chip">배송 고객센터</span>
+          <span class="quick-chip">합배송/환적</span>
+          <span class="quick-chip">금지 품목</span>
+          <span class="quick-chip">배송 조회</span>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="add-circle">+</div>
+        </div>
+      </div>
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+    <div class="research-label research-tobe">
+      <strong>맥락 연속성 → 상호작용 회복탄력성 유지 (PCD / 목표2)</strong><br>
+      백그라운드 전환 시에도 대기 순서와 대화 맥락 보존, 이탈 방지
+    </div>
+  </div>
+
+</div><!-- /g4 -->
+
+<script>
+function show(n){
+  for(var i=1;i<=4;i++) document.getElementById('g'+i).classList.remove('active');
+  document.getElementById('g'+n).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){ b.classList.toggle('active',i===n-1); });
+}
+</script>
+</body>
+</html>
