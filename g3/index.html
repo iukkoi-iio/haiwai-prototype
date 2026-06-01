@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 透明化人工升级 · AI客服设计原型</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:#e4e6ea;
+  min-height:100vh;
+  padding:28px 20px 48px;
+}
+
+/* ── Page header ── */
+.page-header{text-align:center;margin-bottom:28px}
+.page-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:5px}
+.page-sub{font-size:12px;color:#777;line-height:1.6;max-width:680px;margin:0 auto}
+.guideline-badge{
+  display:inline-block;background:#ff6600;color:#fff;
+  font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;
+  margin-bottom:10px;letter-spacing:.5px;
+}
+
+/* ── Two-phone layout ── */
+.phones-row{
+  display:flex;gap:28px;justify-content:center;
+  align-items:flex-start;flex-wrap:wrap;
+}
+.phone-col{display:flex;flex-direction:column;align-items:center}
+.phone-col-label{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.lang-pill{
+  font-size:12px;font-weight:700;padding:4px 13px;border-radius:20px;
+  color:#fff;letter-spacing:.3px;
+}
+.lang-pill.cn{background:#ff6600}
+.lang-pill.ko{background:#1a73e8}
+.col-title{font-size:13px;font-weight:600;color:#333}
+
+/* ── Phone frame ── */
+.phone{
+  width:340px;
+  border-radius:38px;
+  box-shadow:0 8px 40px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.15);
+  overflow:hidden;
+  border:7px solid #111;
+  background:#f0f0f0;
+}
+
+/* Status bar */
+.sbar{
+  background:#fff;padding:11px 20px 7px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;font-weight:700;color:#111;
+}
+.sbar-right{display:flex;gap:5px;align-items:center}
+.bat{background:#111;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px}
+
+/* Chat header */
+.chat-hdr{
+  background:#fff;border-bottom:1px solid #ebebeb;
+  padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+}
+.hdr-back{font-size:21px;color:#111;line-height:1;cursor:pointer}
+.hdr-title{font-size:16px;font-weight:600;flex:1;text-align:center;color:#111}
+.hdr-right{position:relative;display:flex;align-items:center}
+.hdr-dots{font-size:20px;color:#333;letter-spacing:1.5px}
+.hdr-badge{
+  position:absolute;top:-7px;right:-7px;
+  background:#e53935;color:#fff;border-radius:10px;
+  font-size:10px;font-weight:700;padding:1px 5px;min-width:18px;text-align:center;
+}
+
+/* Chat body — FIXED HEIGHT */
+.chat-body{
+  background:#f0f0f0;
+  padding:12px 12px 8px;
+  height:490px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:11px;
+}
+.chat-body::-webkit-scrollbar{width:3px}
+.chat-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+
+/* Timestamp */
+.ts{text-align:center;font-size:11px;color:#bbb;margin:2px 0}
+
+/* Bubbles */
+.row-user{display:flex;justify-content:flex-end}
+.row-ai{display:flex;flex-direction:column;align-items:flex-start}
+.ai-name-label{font-size:11px;color:#aaa;margin-bottom:3px;padding-left:2px}
+
+.bubble{
+  padding:9px 13px;border-radius:18px;
+  font-size:13px;line-height:1.6;max-width:240px;word-break:break-all;
+}
+.bubble-u{
+  background:#fff8e1;color:#222;
+  border-bottom-right-radius:4px;
+}
+.bubble-ai{
+  background:#fff;color:#222;
+  border-bottom-left-radius:4px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+
+/* Failure feedback bar */
+.feedback-bar{
+  display:flex;align-items:center;gap:8px;
+  margin-top:4px;padding-left:2px;
+}
+.fb-label{font-size:10px;color:#bbb}
+.fb-btn{
+  font-size:10px;padding:2px 8px;border-radius:10px;border:none;cursor:default;
+}
+.fb-btn.thumbs-up{background:#f5f5f5;color:#aaa}
+.fb-btn.thumbs-down-selected{background:#fff0e8;color:#e53935;font-weight:600;border:1px solid #ffc0a0}
+
+/* System notice banner */
+.sys-notice{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 16px;background:#fff9f0;border:1px solid #ffd9b3;
+  border-radius:12px;margin:4px 0;
+}
+.sys-notice-top{display:flex;align-items:center;gap:6px}
+.sys-dot{
+  display:flex;gap:3px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:#ff6600;animation:pulse-dot 1.5s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse-dot{0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)}}
+.sys-notice-text{font-size:12px;color:#c2410c;font-weight:600}
+.sys-notice-sub{font-size:11px;color:#9a5a3a}
+
+/* ── Escalation card ── */
+.esc-card{
+  background:#fff;border-radius:16px;
+  box-shadow:0 2px 12px rgba(255,102,0,.15), 0 1px 5px rgba(0,0,0,.08);
+  border:1.5px solid #ffcca8;
+  overflow:hidden;
+  max-width:290px;
+}
+.esc-top{
+  background:linear-gradient(135deg,#fff8f3,#fff2e6);
+  padding:12px 14px 10px;
+  border-bottom:1px solid #ffe8d6;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.esc-icon-wrap{
+  width:34px;height:34px;border-radius:10px;
+  background:#ff6600;display:flex;align-items:center;
+  justify-content:center;font-size:17px;flex-shrink:0;
+}
+.esc-title-block{}
+.esc-title{font-size:13px;font-weight:700;color:#c2410c;line-height:1.3}
+.esc-subtitle{font-size:11px;color:#9a5a3a;margin-top:2px;line-height:1.4}
+
+/* Step progress */
+.esc-steps{
+  display:flex;align-items:center;padding:10px 14px 8px;gap:0;
+}
+.step-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;
+}
+.step-circle{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+}
+.step-circle.done{background:#e8f5e9;color:#2e7d32;border:1.5px solid #4caf50}
+.step-circle.active{background:#fff3e0;color:#e65100;border:2px solid #ff6600;box-shadow:0 0 0 3px rgba(255,102,0,.15)}
+.step-circle.next{background:#f5f5f5;color:#bbb;border:1.5px solid #e0e0e0}
+.step-label{font-size:9px;color:#888;text-align:center;line-height:1.2;max-width:50px}
+.step-line{flex:1;height:1.5px;margin:0 4px;background:linear-gradient(to right,#4caf50,#ff6600);margin-bottom:12px}
+.step-line.dim{background:#e0e0e0}
+
+/* Queue info box */
+.queue-box{
+  margin:0 14px;background:#fff9f0;border-radius:10px;
+  border:1px solid #ffe8d6;padding:10px 12px 8px;
+  margin-bottom:10px;
+}
+.queue-row{display:flex;justify-content:space-between;margin-bottom:7px}
+.queue-item{display:flex;flex-direction:column;align-items:center;flex:1}
+.queue-item-label{font-size:10px;color:#aaa;margin-bottom:2px}
+.queue-item-value{font-size:15px;font-weight:700;color:#c2410c}
+.queue-item-value span{font-size:11px;font-weight:400;color:#888}
+.queue-divider{width:1px;background:#ffd9b3;margin:0 8px;align-self:stretch}
+.queue-bar-wrap{}
+.queue-bar-label{
+  display:flex;justify-content:space-between;
+  font-size:10px;color:#aaa;margin-bottom:4px;
+}
+.queue-track{height:5px;background:#fde8d4;border-radius:3px;overflow:hidden}
+.queue-fill{
+  height:100%;background:linear-gradient(to right,#ff9933,#ff6600);
+  border-radius:3px;width:66%;
+  animation:progress-anim 2s ease-in-out infinite alternate;
+}
+@keyframes progress-anim{from{width:60%} to{width:72%}}
+
+/* CTA button */
+.cta-btn{
+  display:block;width:calc(100% - 28px);margin:0 14px 10px;
+  background:linear-gradient(135deg,#ff7700,#ff5500);
+  color:#fff;border:none;border-radius:12px;
+  padding:13px 0;font-size:14px;font-weight:700;
+  cursor:pointer;text-align:center;letter-spacing:.3px;
+  box-shadow:0 3px 12px rgba(255,102,0,.4);
+  transition:transform .1s,box-shadow .1s;
+}
+.cta-btn:active{transform:scale(.98);box-shadow:0 1px 6px rgba(255,102,0,.3)}
+
+/* Decline link */
+.esc-decline{
+  text-align:center;font-size:11px;color:#bbb;
+  padding-bottom:12px;cursor:pointer;
+}
+.esc-decline:hover{color:#999}
+
+/* ── Bottom bar ── */
+.chat-bot{
+  background:#fff;border-top:1px solid #ebebeb;
+  padding:8px 11px 10px;
+}
+.bot-top{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.chips{
+  display:flex;gap:6px;flex:1;overflow-x:auto;white-space:nowrap;
+  scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  display:inline-block;padding:5px 11px;background:#f3f4f6;
+  border-radius:13px;font-size:11px;color:#333;white-space:nowrap;flex-shrink:0;
+}
+/* Persistent 转人工 button */
+.btn-human{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#ff6600;color:#fff;border:none;border-radius:14px;
+  padding:5px 11px;font-size:11px;font-weight:700;
+  cursor:pointer;flex-shrink:0;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(255,102,0,.35);
+  text-decoration:none;
+}
+.input-row{display:flex;align-items:center;gap:7px}
+.input-field{
+  flex:1;padding:8px 14px;background:#f3f4f6;
+  border-radius:20px;font-size:12px;color:#aaa;border:none;
+}
+/* Mic button — always visible, standalone */
+.mic-btn{
+  width:33px;height:33px;border-radius:50%;
+  background:#fff;border:1.5px solid #ff6600;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;cursor:pointer;flex-shrink:0;
+  box-shadow:0 1px 5px rgba(255,102,0,.2);
+}
+.add-btn{
+  width:33px;height:33px;border:1.5px solid #ccc;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:#aaa;cursor:pointer;flex-shrink:0;
+}
+
+/* Home indicator */
+.home-ind{background:#fff;height:18px;display:flex;align-items:center;justify-content:center}
+.home-bar{width:112px;height:4px;background:#111;border-radius:2px}
+
+/* Research note */
+.research-note{
+  margin-top:12px;padding:8px 14px;border-radius:9px;font-size:11px;
+  line-height:1.6;text-align:center;max-width:340px;
+  background:#fff3e0;border:1px solid #ffcc80;color:#c2410c;
+}
+.research-note strong{font-weight:700}
+
+/* Ko blue accent override */
+.ko-accent .esc-icon-wrap{background:#1a73e8}
+.ko-accent .sys-notice{background:#f0f5ff;border-color:#aac4ff}
+.ko-accent .sys-notice-text{color:#1a56db}
+.ko-accent .sys-notice-sub{color:#3d6fd4}
+.ko-accent .dot{background:#1a73e8}
+.ko-accent .esc-top{background:linear-gradient(135deg,#f0f5ff,#e8f0ff);border-color:#c3d9ff}
+.ko-accent .esc-card{border-color:#aac4ff;box-shadow:0 2px 12px rgba(26,115,232,.15), 0 1px 5px rgba(0,0,0,.08)}
+.ko-accent .esc-title{color:#1a56db}
+.ko-accent .esc-subtitle{color:#3d6fd4}
+.ko-accent .queue-box{background:#f0f5ff;border-color:#c3d9ff}
+.ko-accent .queue-item-value{color:#1a56db}
+.ko-accent .queue-track{background:#d6e4ff}
+.ko-accent .queue-fill{background:linear-gradient(to right,#4d9cf7,#1a73e8)}
+.ko-accent .cta-btn{background:linear-gradient(135deg,#2e86f7,#1a73e8);box-shadow:0 3px 12px rgba(26,115,232,.4)}
+.ko-accent .btn-human{background:#1a73e8;box-shadow:0 2px 8px rgba(26,115,232,.35)}
+.ko-accent .mic-btn{border-color:#1a73e8;box-shadow:0 1px 5px rgba(26,115,232,.2)}
+.ko-accent .step-circle.active{color:#1a56db;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+.ko-accent .step-line{background:linear-gradient(to right,#4caf50,#1a73e8)}
+.ko-accent .lang-pill{background:#1a73e8}
+.ko-accent .sys-dot .dot{background:#1a73e8}
+
+@media(max-width:760px){
+  .phones-row{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="guideline-badge">G3 · 透明化人工升级支持 / 투명한 상담원 연결 지원</div>
+  <h1 class="page-title">AI客服服务恢复设计原型 · AI 고객서비스 회복 설계 프로토타입</h1>
+  <p class="page-sub">
+    场景：用户同一问题连续3次未获有效解答 → 系统自动检测重复失败 → 主动推荐并接通人工客服<br>
+    시나리오: 동일 문제 3회 반복 → 시스템이 자동으로 반복 실패 감지 → 상담원 연결 자동 권장
+  </p>
+</div>
+
+<div class="phones-row">
+
+  <!-- ═══════════════════════════════
+       CHINESE VERSION
+       ═══════════════════════════════ -->
+  <div class="phone-col">
+    <div class="phone-col-label">
+      <span class="lang-pill cn">中文版</span>
+      <span class="col-title">海外小蜜 · G3 设计示例</span>
+    </div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="sbar">
+        <span>09:41</span>
+        <div class="sbar-right"><span>▐▐▐</span><span>🛜</span><span class="bat">78</span></div>
+      </div>
+
+      <!-- Chat header -->
+      <div class="chat-hdr">
+        <span class="hdr-back">←</span>
+        <span class="hdr-title"></span>
+        <div class="hdr-right">
+          <span class="hdr-dots">···</span>
+          <span class="hdr-badge">3</span>
+        </div>
+      </div>
+
+      <!-- Chat body -->
+      <div class="chat-body">
+        <div class="ts">09:41</div>
+
+        <!-- ── Exchange 1 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">你好，我买的衣服材质和商品详情页描述完全不符，我能申请退款吗？谁来负责？</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">海外小蜜</div>
+          <div class="bubble bubble-ai">亲，退款一般在申请后7个工作日内完成处理。如需查看退款进度，请前往「我的订单」查看。如有疑问，可继续咨询哦～</div>
+          <div class="feedback-bar">
+            <span class="fb-label">是否有帮助？</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 没帮助</button>
+          </div>
+        </div>
+
+        <!-- ── Exchange 2 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">不是查进度，我是问材质和描述不符，这种情况能退款吗？是卖家的责任吗？</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">海外小蜜</div>
+          <div class="bubble bubble-ai">亲，如您需要申请退款，可在「我的订单」中点击相应订单，选择"申请退款/退货"，按提示操作即可。退款金额以实际支付为准。</div>
+          <div class="feedback-bar">
+            <span class="fb-label">是否有帮助？</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 没帮助</button>
+          </div>
+        </div>
+
+        <!-- ── Exchange 3 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">你完全没有回答我的问题！材质虚假宣传，到底是卖家负责还是平台负责？！</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">海外小蜜</div>
+          <div class="bubble bubble-ai">非常抱歉给您带来不便。如需了解更多退款政策，可查看淘宝帮助中心，或点击底部「转人工」联系客服。</div>
+          <div class="feedback-bar">
+            <span class="fb-label">是否有帮助？</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 没帮助</button>
+          </div>
+        </div>
+
+        <!-- ── System detection notice ── -->
+        <div class="sys-notice">
+          <div class="sys-notice-top">
+            <div class="sys-dot"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <span class="sys-notice-text">系统检测到您的问题重复了 3 次</span>
+          </div>
+          <div class="sys-notice-sub">您的问题似乎尚未得到解决，正在为您升级服务…</div>
+        </div>
+
+        <!-- ── Escalation card (AI sends) ── -->
+        <div class="row-ai">
+          <div class="ai-name-label">海外小蜜</div>
+          <div class="esc-card">
+
+            <!-- Card top -->
+            <div class="esc-top">
+              <div class="esc-icon-wrap">🔔</div>
+              <div class="esc-title-block">
+                <div class="esc-title">已为您自动升级服务</div>
+                <div class="esc-subtitle">AI未能解决您的问题，建议由人工客服为您处理</div>
+              </div>
+            </div>
+
+            <!-- Step progress -->
+            <div class="esc-steps">
+              <div class="step-item">
+                <div class="step-circle done">✓</div>
+                <div class="step-label">AI 解答</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item">
+                <div class="step-circle active">⚡</div>
+                <div class="step-label">问题<br>检测</div>
+              </div>
+              <div class="step-line dim"></div>
+              <div class="step-item">
+                <div class="step-circle next">👤</div>
+                <div class="step-label">人工<br>客服</div>
+              </div>
+            </div>
+
+            <!-- Queue info -->
+            <div class="queue-box">
+              <div class="queue-row">
+                <div class="queue-item">
+                  <div class="queue-item-label">当前排队</div>
+                  <div class="queue-item-value">2 <span>位</span></div>
+                </div>
+                <div class="queue-divider"></div>
+                <div class="queue-item">
+                  <div class="queue-item-label">预计等待</div>
+                  <div class="queue-item-value">40 <span>秒</span></div>
+                </div>
+              </div>
+              <div class="queue-bar-wrap">
+                <div class="queue-bar-label">
+                  <span>排队进度</span><span>约 66%</span>
+                </div>
+                <div class="queue-track"><div class="queue-fill"></div></div>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <button class="cta-btn">👤 立即接通人工客服</button>
+
+            <!-- Decline -->
+            <div class="esc-decline">继续与 AI 对话</div>
+
+          </div>
+        </div>
+
+      </div><!-- /chat-body -->
+
+      <!-- Bottom bar -->
+      <div class="chat-bot">
+        <div class="bot-top">
+          <div class="chips">
+            <span class="chip">联系物流客服</span>
+            <span class="chip">合单/转运</span>
+            <span class="chip">禁运品</span>
+            <span class="chip">查物流</span>
+          </div>
+          <button class="btn-human">👤 转人工</button>
+        </div>
+        <div class="input-row">
+          <div class="input-field">请输入想咨询的问题</div>
+          <div class="mic-btn">🎤</div>
+          <div class="add-btn">+</div>
+        </div>
+      </div>
+
+      <div class="home-ind"><div class="home-bar"></div></div>
+    </div><!-- /phone -->
+
+    <div class="research-note">
+      <strong>G3 · 透明化人工升级支持</strong><br>
+      设计原则：检测重复失败 → 主动推荐 → 一键接通 → 显示排队信息<br>
+      对应变量：PHSU（感知人工支持不可得）/ Goal 3
+    </div>
+  </div><!-- /CN col -->
+
+
+  <!-- ═══════════════════════════════
+       KOREAN VERSION
+       ═══════════════════════════════ -->
+  <div class="phone-col ko-accent">
+    <div class="phone-col-label">
+      <span class="lang-pill ko">한국어</span>
+      <span class="col-title">해외소미 · G3 설계 예시</span>
+    </div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="sbar">
+        <span>09:41</span>
+        <div class="sbar-right"><span>▐▐▐</span><span>🛜</span><span class="bat">78</span></div>
+      </div>
+
+      <!-- Chat header -->
+      <div class="chat-hdr">
+        <span class="hdr-back">←</span>
+        <span class="hdr-title"></span>
+        <div class="hdr-right">
+          <span class="hdr-dots">···</span>
+          <span class="hdr-badge">3</span>
+        </div>
+      </div>
+
+      <!-- Chat body -->
+      <div class="chat-body">
+        <div class="ts">09:41</div>
+
+        <!-- ── Exchange 1 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">안녕하세요, 구매한 옷 소재가 상품 설명과 전혀 달라요. 환불받을 수 있나요? 책임은 누구에게 있나요?</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">해외소미</div>
+          <div class="bubble bubble-ai">고객님, 환불 신청은 보통 영업일 기준 7일 내에 처리됩니다. 진행 상황은 '내 주문'에서 확인하실 수 있습니다.</div>
+          <div class="feedback-bar">
+            <span class="fb-label">도움이 됐나요?</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 도움 안 됨</button>
+          </div>
+        </div>
+
+        <!-- ── Exchange 2 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">환불 진행 상황이 아니라요. 소재가 설명과 다를 때 환불이 되는지, 책임자가 누구인지 묻고 있어요.</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">해외소미</div>
+          <div class="bubble bubble-ai">환불을 원하시면 '내 주문'에서 해당 주문을 선택하고 '환불/반품 신청'을 클릭하시면 됩니다. 환불 금액은 실제 결제 금액 기준입니다.</div>
+          <div class="feedback-bar">
+            <span class="fb-label">도움이 됐나요?</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 도움 안 됨</button>
+          </div>
+        </div>
+
+        <!-- ── Exchange 3 ── -->
+        <div class="row-user">
+          <div class="bubble bubble-u">제 질문에 제대로 답을 못 하고 계시잖아요! 소재 허위광고는 판매자 책임인가요, 플랫폼 책임인가요?!</div>
+        </div>
+        <div class="row-ai">
+          <div class="ai-name-label">해외소미</div>
+          <div class="bubble bubble-ai">불편을 드려 진심으로 사과드립니다. 자세한 내용은 타오바오 도움말 센터를 참고하시거나, 하단의 '상담원 연결'을 이용해주세요.</div>
+          <div class="feedback-bar">
+            <span class="fb-label">도움이 됐나요?</span>
+            <button class="fb-btn thumbs-up">👍</button>
+            <button class="fb-btn thumbs-down-selected">👎 도움 안 됨</button>
+          </div>
+        </div>
+
+        <!-- ── System detection notice ── -->
+        <div class="sys-notice">
+          <div class="sys-notice-top">
+            <div class="sys-dot"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <span class="sys-notice-text">시스템이 동일 문제 3회 반복을 감지했습니다</span>
+          </div>
+          <div class="sys-notice-sub">아직 문제가 해결되지 않은 것 같습니다. 서비스를 업그레이드하는 중입니다…</div>
+        </div>
+
+        <!-- ── Escalation card ── -->
+        <div class="row-ai">
+          <div class="ai-name-label">해외소미</div>
+          <div class="esc-card">
+
+            <div class="esc-top">
+              <div class="esc-icon-wrap">🔔</div>
+              <div class="esc-title-block">
+                <div class="esc-title">자동으로 서비스를 업그레이드했습니다</div>
+                <div class="esc-subtitle">AI가 문제를 해결하지 못했습니다. 인간 상담원이 도와드리겠습니다.</div>
+              </div>
+            </div>
+
+            <div class="esc-steps">
+              <div class="step-item">
+                <div class="step-circle done">✓</div>
+                <div class="step-label">AI 상담</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item">
+                <div class="step-circle active">⚡</div>
+                <div class="step-label">문제<br>감지</div>
+              </div>
+              <div class="step-line dim"></div>
+              <div class="step-item">
+                <div class="step-circle next">👤</div>
+                <div class="step-label">인간<br>상담원</div>
+              </div>
+            </div>
+
+            <div class="queue-box">
+              <div class="queue-row">
+                <div class="queue-item">
+                  <div class="queue-item-label">현재 대기</div>
+                  <div class="queue-item-value">2 <span>번째</span></div>
+                </div>
+                <div class="queue-divider"></div>
+                <div class="queue-item">
+                  <div class="queue-item-label">예상 대기</div>
+                  <div class="queue-item-value">40 <span>초</span></div>
+                </div>
+              </div>
+              <div class="queue-bar-wrap">
+                <div class="queue-bar-label">
+                  <span>연결 진행도</span><span>약 66%</span>
+                </div>
+                <div class="queue-track"><div class="queue-fill"></div></div>
+              </div>
+            </div>
+
+            <button class="cta-btn">👤 상담원에게 연결하기</button>
+            <div class="esc-decline">계속 AI와 대화하기</div>
+
+          </div>
+        </div>
+
+      </div><!-- /chat-body -->
+
+      <!-- Bottom bar -->
+      <div class="chat-bot">
+        <div class="bot-top">
+          <div class="chips">
+            <span class="chip">배송 고객센터</span>
+            <span class="chip">합배송/환적</span>
+            <span class="chip">금지 품목</span>
+            <span class="chip">배송 조회</span>
+          </div>
+          <button class="btn-human">👤 상담원 연결</button>
+        </div>
+        <div class="input-row">
+          <div class="input-field">문의사항을 입력해주세요</div>
+          <div class="mic-btn">🎤</div>
+          <div class="add-btn">+</div>
+        </div>
+      </div>
+
+      <div class="home-ind"><div class="home-bar"></div></div>
+    </div><!-- /phone -->
+
+    <div class="research-note" style="background:#eff5ff;border-color:#aac4ff;color:#1a56db">
+      <strong>G3 · 투명한 상담원 연결 지원</strong><br>
+      설계 원칙: 반복 실패 감지 → 자동 권장 → 원클릭 연결 → 대기 정보 표시<br>
+      대응 변수: PHSU (지각된 인간 지원 불가) / 목표 3
+    </div>
+  </div><!-- /KO col -->
+
+</div><!-- /phones-row -->
+
+</body>
+</html>
